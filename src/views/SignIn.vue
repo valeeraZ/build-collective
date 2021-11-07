@@ -3,29 +3,19 @@
     <card
       v-if="!address"
       title="It looks like you're not connected."
-      subtitle="Please connect to use the app."
+      subtitle="Connect an account of MetaMask to use"
       :blue="true"
     >
       <collective-button :transparent="true" @click="connect">
-        Connect
+        Connect the MetaMask
       </collective-button>
     </card>
     <card title="You're connected!" subtitle="Hooray" :blue="true" v-else>
       <collective-button :transparent="true" @click="goToAccount">
-        Go to account
+        Go to Dashboard of Open Collective
       </collective-button>
     </card>
     <spacer :size="24" />
-    <div class="home">
-      <card
-        v-for="(link, index) in links"
-        :key="index"
-        :title="link.title"
-        subtitle="To never be lost"
-      >
-        <a class="card-body" :href="link.link"> Find it here </a>
-      </card>
-    </div>
   </div>
 </template>
 
@@ -42,36 +32,13 @@ export default defineComponent({
   setup() {
     const store = useStore()
     const address = computed(() => store.state.account.address)
-    const connect = () => store.dispatch('ethereumConnect')
-    return { address, connect }
-  },
-  computed: {
-    links() {
-      const link = (title_: string, link: string) => {
-        const title = `${title_} Documentation`
-        return { title, link }
-      }
-      const vue = 'https://v3.vuejs.org/guide/introduction.html'
-      const vuex = 'https://vuex.vuejs.org/fr/api/'
-      const web3 = 'https://web3js.readthedocs.io/en/v1.2.11/index.html'
-      const solidity = 'https://docs.soliditylang.org/en/v0.8.9/'
-      const metamask = 'https://docs.metamask.io/guide/'
-      const gridGarden = 'https://cssgridgarden.com/'
-      const flexboxFroggy = 'https://flexboxfroggy.com/'
-      const mdn = 'https://developer.mozilla.org/fr/'
-      return [
-        link('Vue.js', vue),
-        link('Vuex', vuex),
-        link('Web3', web3),
-        link('Solidity', solidity),
-        link('MetaMask', metamask),
-        { title: 'MDN', link: mdn },
-        { title: 'Flexbox Froggy', link: flexboxFroggy },
-        { title: 'Grid Garden', link: gridGarden },
-      ]
-    },
+    const contract = computed(() => store.state.contract)
+    return { address, contract, store }
   },
   methods: {
+    connect() {
+      this.store.dispatch('ethereumConnect')
+    },
     goToAccount() {
       this.$router.push({ name: 'Account' })
     },
@@ -93,7 +60,7 @@ export default defineComponent({
 
 .card-body {
   padding: 12px;
-  display: block;
+  display: inline;
   font-family: inherit;
   font-size: 1.2rem;
   font-weight: inherit;
