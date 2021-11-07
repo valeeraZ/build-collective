@@ -5,8 +5,20 @@
       :subtitle="`${balance} ETH \t\t${account.balance} Tokens`"
       :gradient="true"
     >
-      <h2>Enterprise Information</h2>
-      <span>{{ enterpriseAccount }}</span>
+      <div class="explanations" v-if="enterpriseAccount">
+        <h2>Enterprise Information</h2>
+        <p><b>Name of Enterprise: </b>{{ enterpriseAccount.name }}</p>
+        <p><b>Owner: </b>{{ enterpriseAccount.owner.username }}</p>
+        <p><b>Members: </b>
+          <span
+            v-for="member in enterpriseMembers"
+            v-bind:key="member.address"
+          >
+            {{ member.account.username }}
+          </span>
+        </p>
+        <p><b>Balance: </b>{{ enterpriseAccount.balance }} Tokens</p>
+      </div>
     </card>
     <spacer :size="24" />
     <div class="home">
@@ -41,6 +53,7 @@
           v-model="userBalance"
           placeholder="Balance of tokens"
         />
+        <button type="submit" class="input-username">Submit</button>
       </card>
     </form>
   </div>
@@ -85,7 +98,7 @@ export default defineComponent({
     const enterpriseAccount = null
     const enterpriseName = ''
     const enterpriseBalance = ''
-    const enterpriseMembers: never[] = []
+    const enterpriseMembers: any[] = []
     return {
       account,
       username,
@@ -105,6 +118,9 @@ export default defineComponent({
       const { address, contract } = this
       this.enterpriseAccount = await contract.methods.enterprise(address).call()
     },
+    getMembersAccount(addressMember: string) {
+      return this.contract.methods.user(addressMember).call()
+    },
     async signUp() {
       const { contract, username, userBalance } = this
       const name = username.trim().replace(/ /g, '_')
@@ -121,8 +137,18 @@ export default defineComponent({
   async mounted() {
     const { address, contract } = this
     const account = await contract.methods.user(address).call()
-    this.enterpriseAccount = await contract.methods.enterprise(address).call()
     if (account.registered) this.account = account
+    const enterpriseAccount = await contract.methods.enterprise(address).call()
+    this.enterpriseAccount = enterpriseAccount
+    const membersAddress = enterpriseAccount.membersAddress
+    for (const membersAddressKey of membersAddress) {
+      const member = await contract.methods.user(membersAddressKey).call()
+      console.log(member)
+      this.enterpriseMembers.push({
+        address: membersAddressKey,
+        account: member
+      })
+    }
   },
 })
 </script>

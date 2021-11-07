@@ -21,6 +21,7 @@ contract BuildCollective is Ownable {
   struct Enterprise {
     string name;
     User owner;
+    address[] membersAddress;
     uint256 balance;
   }
 
@@ -46,7 +47,7 @@ contract BuildCollective is Ownable {
     return enterprises[enterpriseAddress];
   }
 
-  function members(address enterpriseAddress) external view returns (address[] memory) {
+  function members(address enterpriseAddress) public view returns (address[] memory) {
     return enterpriseMembersAddress[enterpriseAddress];
   }
 
@@ -61,10 +62,7 @@ contract BuildCollective is Ownable {
   function enterpriseSignUp(string memory name, address[] memory address_members, uint256 amount) public returns (Enterprise memory) {
     require(users[msg.sender].registered);
     require(bytes(name).length > 0);
-    enterprises[msg.sender] = Enterprise(name, users[msg.sender], amount);
-    for(uint i = 0; i < address_members.length; i++){
-      enterpriseMembersAddress[msg.sender].push(address_members[i]);
-    }
+    enterprises[msg.sender] = Enterprise(name, users[msg.sender], address_members, amount);
     emit EnterpriseSignedUp(msg.sender, enterprises[msg.sender]);
     return enterprises[msg.sender];
   }
