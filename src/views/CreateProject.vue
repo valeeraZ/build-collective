@@ -1,16 +1,41 @@
 <template lang="html">
-  <form @submit.prevent="enterpriseSignUp">
+  <form @submit.prevent="createProject">
     <card
-      title="Create an enterprise account"
-      subtitle="With a name, some members and a balance of tokens"
+      title="Create a project"
+      subtitle="With a name, some contributors and a balance of tokens"
     >
+      <div v-if="enterpriseAccount">
+        <span class="input-username"
+          >This project is owned by yourself or your enterprise ?</span
+        >
+        <div class="input-username">
+          <input
+            type="radio"
+            id="user"
+            v-bind:value="true"
+            v-model="ownedByUser"
+          />
+          <label for="user">Yourself: {{ account.username }}</label>
+        </div>
+        <div class="input-username">
+          <input
+            type="radio"
+            id="enterprise"
+            v-bind:value="false"
+            v-model="ownedByUser"
+          />
+          <label for="enterprise"
+            >Your enterprise: {{ enterpriseAccount.name }}</label
+          >
+        </div>
+      </div>
       <input
         type="text"
         class="input-username"
-        v-model="enterpriseName"
-        placeholder="Enterprise name"
+        v-model="projectName"
+        placeholder="Project name"
       />
-      <span class="input-username">Choose one or multiple members</span>
+      <span class="input-username">Choose one or multiple contributors</span>
       <div
         v-for="user in users"
         v-bind:key="user.address"
@@ -20,14 +45,14 @@
           type="checkbox"
           :id="user.address"
           :value="user.address"
-          v-model="enterpriseMembers"
+          v-model="projectContributors"
         />
         <span>{{ user.account.username }}</span>
       </div>
       <input
         type="number"
         class="input-username"
-        v-model="enterpriseBalance"
+        v-model="projectBalance"
         placeholder="Balance of tokens"
       />
       <button type="submit" class="input-username">Submit</button>
@@ -41,7 +66,7 @@ import { useStore } from 'vuex'
 import Card from '@/components/Card.vue'
 
 export default defineComponent({
-  name: 'SignUpEnterprise',
+  name: 'CreateProject',
   components: { Card },
   setup() {
     const store = useStore()
@@ -50,41 +75,57 @@ export default defineComponent({
     return { address, contract }
   },
   data() {
+    const account = null
     // array of all users on the block chain
     // for enterprise to select members
     const users: any[] = []
     const enterpriseAccount = null
-    const enterpriseName = ''
-    const enterpriseBalance = ''
-    const enterpriseMembers: never[] = []
+    const project = null
+    const ownedByUser = true
+    const projectName = ''
+    const projectBalance = ''
+    const projectContributors: never[] = []
     return {
-      enterpriseName,
-      users,
+      account,
       enterpriseAccount,
-      enterpriseBalance,
-      enterpriseMembers,
+      project,
+      users,
+      ownedByUser,
+      projectName,
+      projectBalance,
+      projectContributors,
     }
   },
   methods: {
+    async updateAccount() {
+      const { address, contract } = this
+      this.account = await contract.methods.getUserByAddress(address).call()
+    },
     async updateEnterpriseAccount() {
       const { address, contract } = this
       this.enterpriseAccount = await contract.methods
         .getEnterpriseByAddress(address)
         .call()
     },
-    async enterpriseSignUp() {
-      const { contract, enterpriseName, enterpriseMembers, enterpriseBalance } =
-        this
-      const name = enterpriseName.trim().replace(/ /g, '_')
+    async createProject() {
+      const {
+        contract,
+        projectName,
+        ownedByUser,
+        projectBalance,
+        projectContributors,
+      } = this
+      const name = projectName.trim().replace(/ /g, '_')
       await contract.methods
-        .enterpriseSignUp(name, enterpriseMembers, enterpriseBalance)
+        .projectCreate(name, ownedByUser, projectContributors, projectBalance)
         .send()
-      await this.updateEnterpriseAccount()
       await this.$router.push({ name: 'Account' })
     },
   },
   async mounted() {
     const { address, contract } = this
+    const account = await contract.methods.getUserByAddress(address).call()
+    if (account.registered) this.account = account
     this.enterpriseAccount = await contract.methods
       .getEnterpriseByAddress(address)
       .call()

@@ -3,6 +3,7 @@ import store from '@/store'
 import SignIn from '@/views/SignIn.vue'
 import Account from '@/views/Account.vue'
 import SignUpEnterprise from '@/views/SignUpEnterprise.vue'
+import CreateProject from '@/views/CreateProject.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -19,6 +20,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/account',
     name: 'Account',
     component: Account,
+  },
+  {
+    path: '/create-project',
+    name: 'createProject',
+    component: CreateProject,
   },
 ]
 

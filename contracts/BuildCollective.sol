@@ -12,12 +12,6 @@ contract BuildCollective is Ownable {
 
   address[] public userAddresses;
 
-  struct Issue {
-    User owner;
-    uint256 reward;
-    bool closed;
-  }
-
   struct Enterprise {
     string name;
     User owner;
@@ -25,17 +19,37 @@ contract BuildCollective is Ownable {
     uint256 balance;
   }
 
-  mapping(address => address[]) private enterpriseMembersAddress;
+  struct Project {
+    string name;
+    address owner; // an address pointing to user / enterprise
+    bool ownedByUser; // if true, the "address owner" points to user; otherwise, enterprise
+    address[] contributorsAddress;
+    uint256 balance;
+  }
 
-  mapping(address => User) private users;
+  struct Issue {
+    string title;
+    string description;
+    string link; // GitHub or GitLab link of issue
+    User issuer; // the one who spots the issue
+    User fixer; // the one who fixes the issue
+    uint256 reward; // the amount of ETH rewarded to fixer
+    bool closed; // if true, the issue is fixed and reward is given
+  }
 
-  mapping(address => Enterprise) private enterprises;
+  mapping(address => User) private users; // user's address -> User
+
+  mapping(address => Enterprise) private enterprises; // owner's address -> owner's enterprise
+
+  mapping(address => Project[]) private projects;
 
   event UserSignedUp(address indexed userAddress, User indexed user);
 
   event EnterpriseSignedUp(address indexed ownerAddress, Enterprise indexed enterprise);
 
-  function user(address userAddress) public view returns (User memory) {
+  event ProjectCreate(address indexed ownerAddress, Project indexed project);
+
+  function getUserByAddress(address userAddress) public view returns (User memory) {
     return users[userAddress];
   }
 
@@ -43,12 +57,12 @@ contract BuildCollective is Ownable {
     return userAddresses;
   }
 
-  function enterprise(address enterpriseAddress) public view returns (Enterprise memory) {
+  function getEnterpriseByAddress(address enterpriseAddress) public view returns (Enterprise memory) {
     return enterprises[enterpriseAddress];
   }
 
-  function members(address enterpriseAddress) public view returns (address[] memory) {
-    return enterpriseMembersAddress[enterpriseAddress];
+  function getProjectsByAddress(address ownerAddress) public view returns (Project[] memory){
+    return projects[ownerAddress];
   }
 
   function signUp(string memory username, uint256 amount) public returns (User memory) {
@@ -65,6 +79,15 @@ contract BuildCollective is Ownable {
     enterprises[msg.sender] = Enterprise(name, users[msg.sender], address_members, amount);
     emit EnterpriseSignedUp(msg.sender, enterprises[msg.sender]);
     return enterprises[msg.sender];
+  }
+
+  function projectCreate(string memory name, bool ownedByUser, address[] memory address_contributors, uint256 amount) public returns (Project memory){
+    require(users[msg.sender].registered);
+    require(bytes(name).length > 0);
+    projects[msg.sender].push(Project(name, msg.sender, ownedByUser, address_contributors, amount));
+    uint pos = projects[msg.sender].length;
+    emit ProjectCreate(msg.sender, projects[msg.sender][pos-1]);
+    return projects[msg.sender][pos-1];
   }
 
   function addBalance(uint256 amount) public returns (bool) {

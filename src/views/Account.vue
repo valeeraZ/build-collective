@@ -1,36 +1,95 @@
 <template lang="html">
   <div class="home-wrapper" v-if="account">
     <card
-      :title="account.username"
-      :subtitle="`${balance} ETH \t\t${account.balance} Tokens`"
+      title="Your Account"
+      :subtitle="`${account.username} \t\t${account.balance} Tokens`"
       :gradient="true"
+    >
+      <div class="explanations">
+        <h2>Account Information</h2>
+        <p><b>Name of Account: </b>{{ account.username }}</p>
+        <p><b>Address: </b>{{ address }}</p>
+        <p><b>ETH: </b>{{ balance }}</p>
+        <p><b>Balance: </b>{{ account.balance }} Tokens</p>
+      </div>
+    </card>
+    <spacer :size="24" />
+    <card
+      title="Your Enterprise"
+      :subtitle="`${enterpriseAccount.name} \t\t${enterpriseAccount.balance} Tokens`"
+      v-if="enterpriseAccount"
     >
       <div class="explanations" v-if="enterpriseAccount">
         <h2>Enterprise Information</h2>
         <p><b>Name of Enterprise: </b>{{ enterpriseAccount.name }}</p>
         <p><b>Owner: </b>{{ enterpriseAccount.owner.username }}</p>
-        <p><b>Members: </b>
-          <span
+        <p><b>Owner's Address: </b>{{ address }}</p>
+        <div>
+          <b>Members: </b>
+          <p
             v-for="member in enterpriseMembers"
             v-bind:key="member.address"
+            style="padding-left: 10px"
           >
-            {{ member.account.username }}
-          </span>
-        </p>
+            Account Name: {{ member.account.username }} &nbsp; Address:
+            {{ member.address }}
+          </p>
+        </div>
         <p><b>Balance: </b>{{ enterpriseAccount.balance }} Tokens</p>
+      </div>
+    </card>
+    <spacer :size="24" />
+    <card
+      title="Your Projects"
+      :subtitle="`Number of Projects: ${projects.length}`"
+      v-if="projects"
+    >
+      <div
+        class="explanations"
+        v-for="project in projects"
+        v-bind:key="project.name"
+      >
+        <h2>Project Information</h2>
+        <p><b>Name of Project: </b>{{ project.name }}</p>
+        <p>
+          <b>Owner of Project: </b>
+          {{
+            project.ownedByUser ? project.owner.username : project.owner.name
+          }}
+        </p>
+        <div>
+          <b>Contributors: </b>
+          <p
+            v-for="contributor in project.contributors"
+            v-bind:key="contributor.address"
+            style="padding-left: 10px"
+          >
+            Account Name: {{ contributor.account.username }} &nbsp; Address:
+            {{ contributor.address }}
+          </p>
+        </div>
+        <p><b>Balance of Project: </b>{{ project.balance }} Tokens</p>
       </div>
     </card>
     <spacer :size="24" />
     <div class="home">
       <card
-        v-for="(link, index) in links"
-        :key="index"
-        :title="link.title"
-        :subtitle="link.subtitle"
+        title="Create an enterprise"
+        subtitle="With a name, members and a balance"
+        :blue="true"
+        v-if="!enterpriseAccount"
+      >
+        <router-link class="card-body" to="/signup-enterprise">
+          Create your enterprise
+        </router-link>
+      </card>
+      <card
+        title="Create a project"
+        subtitle="With a name, contributors and a balance"
         :blue="true"
       >
-        <router-link class="card-body" :to="link.link">
-          Find it here
+        <router-link class="card-body" to="/create-project">
+          Create your project
         </router-link>
       </card>
     </div>
@@ -75,51 +134,35 @@ export default defineComponent({
     const contract = computed(() => store.state.contract)
     return { address, contract, balance }
   },
-  computed: {
-    links() {
-      return [
-        {
-          title: 'Create an enterprise',
-          subtitle: 'With a name, members and a balance',
-          link: '/signup-enterprise',
-        },
-        {
-          title: 'Create a project',
-          subtitle: 'With a name, contributors and a balance',
-          link: '/',
-        },
-      ]
-    },
-  },
   data() {
     const account = null
     const username = ''
     const userBalance = ''
     const enterpriseAccount = null
-    const enterpriseName = ''
-    const enterpriseBalance = ''
     const enterpriseMembers: any[] = []
+    const projects: any[] = []
     return {
       account,
       username,
       userBalance,
-      enterpriseName,
       enterpriseAccount,
-      enterpriseBalance,
       enterpriseMembers,
+      projects,
     }
   },
   methods: {
     async updateAccount() {
       const { address, contract } = this
-      this.account = await contract.methods.user(address).call()
+      this.account = await contract.methods.getUserByAddress(address).call()
     },
     async updateEnterpriseAccount() {
       const { address, contract } = this
-      this.enterpriseAccount = await contract.methods.enterprise(address).call()
+      this.enterpriseAccount = await contract.methods
+        .getEnterpriseByAddress(address)
+        .call()
     },
     getMembersAccount(addressMember: string) {
-      return this.contract.methods.user(addressMember).call()
+      return this.contract.methods.getUserByAddress(addressMember).call()
     },
     async signUp() {
       const { contract, username, userBalance } = this
@@ -136,18 +179,56 @@ export default defineComponent({
   },
   async mounted() {
     const { address, contract } = this
-    const account = await contract.methods.user(address).call()
+    const account = await contract.methods.getUserByAddress(address).call()
     if (account.registered) this.account = account
-    const enterpriseAccount = await contract.methods.enterprise(address).call()
-    this.enterpriseAccount = enterpriseAccount
-    const membersAddress = enterpriseAccount.membersAddress
-    for (const membersAddressKey of membersAddress) {
-      const member = await contract.methods.user(membersAddressKey).call()
-      console.log(member)
-      this.enterpriseMembers.push({
-        address: membersAddressKey,
-        account: member
-      })
+    const enterpriseAccount = await contract.methods
+      .getEnterpriseByAddress(address)
+      .call()
+    if (enterpriseAccount.name) {
+      this.enterpriseAccount = enterpriseAccount
+      const membersAddress = enterpriseAccount.membersAddress
+      for (const membersAddressKey of membersAddress) {
+        const member = await contract.methods
+          .getUserByAddress(membersAddressKey)
+          .call()
+        this.enterpriseMembers.push({
+          address: membersAddressKey,
+          account: member,
+        })
+      }
+    }
+    const projects = await contract.methods.getProjectsByAddress(address).call()
+    if (projects.length > 0) {
+      for (const project of projects) {
+        let name = project.name
+        let owner = null
+        if (project.ownedByUser) {
+          owner = await contract.methods.getUserByAddress(project.owner).call()
+        } else {
+          owner = await contract.methods
+            .getEnterpriseByAddress(project.owner)
+            .call()
+        }
+        let balance = project.balance
+        const contributorsAddress = project.contributorsAddress
+        let contributors = []
+        for (const contributorsAddressKey of contributorsAddress) {
+          const contributor = await contract.methods
+            .getUserByAddress(contributorsAddressKey)
+            .call()
+          contributors.push({
+            address: contributorsAddressKey,
+            account: contributor,
+          })
+        }
+        this.projects.push({
+          name: name,
+          owner: owner,
+          ownedByUser: project.ownedByUser,
+          balance: balance,
+          contributors: contributors,
+        })
+      }
     }
   },
 })
