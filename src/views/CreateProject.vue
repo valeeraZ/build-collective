@@ -35,6 +35,12 @@
         v-model="projectName"
         placeholder="Project name"
       />
+      <input
+        type="text"
+        class="input-username"
+        v-model="projectLink"
+        placeholder="Project Link (GitHub/GitLab/Other Git Mirror)"
+      />
       <span class="input-username">Choose one or multiple contributors</span>
       <div
         v-for="user in users"
@@ -81,9 +87,10 @@ export default defineComponent({
     const users: any[] = []
     const enterpriseAccount = null
     const project = null
-    const ownedByUser = true
+    const ownedByUser = 'true'
     const projectName = ''
     const projectBalance = ''
+    const projectLink = ''
     const projectContributors: never[] = []
     return {
       account,
@@ -93,6 +100,7 @@ export default defineComponent({
       ownedByUser,
       projectName,
       projectBalance,
+      projectLink,
       projectContributors,
     }
   },
@@ -101,23 +109,24 @@ export default defineComponent({
       const { address, contract } = this
       this.account = await contract.methods.getUserByAddress(address).call()
     },
-    async updateEnterpriseAccount() {
-      const { address, contract } = this
-      this.enterpriseAccount = await contract.methods
-        .getEnterpriseByAddress(address)
-        .call()
-    },
     async createProject() {
       const {
         contract,
         projectName,
         ownedByUser,
+        projectLink,
         projectBalance,
         projectContributors,
       } = this
       const name = projectName.trim().replace(/ /g, '_')
       await contract.methods
-        .projectCreate(name, ownedByUser, projectContributors, projectBalance)
+        .projectCreate(
+          name,
+          projectLink,
+          ownedByUser,
+          projectContributors,
+          projectBalance
+        )
         .send()
       await this.$router.push({ name: 'Account' })
     },
@@ -126,9 +135,10 @@ export default defineComponent({
     const { address, contract } = this
     const account = await contract.methods.getUserByAddress(address).call()
     if (account.registered) this.account = account
-    this.enterpriseAccount = await contract.methods
+    const enterpriseAccount = await contract.methods
       .getEnterpriseByAddress(address)
       .call()
+    if (enterpriseAccount.name) this.enterpriseAccount = enterpriseAccount
     const userAddresses = await contract.methods.getAllUsers().call()
     for (const userAddressesKey of userAddresses) {
       const account = await contract.methods

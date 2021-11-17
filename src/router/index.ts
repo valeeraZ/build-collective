@@ -3,7 +3,8 @@ import store from '@/store'
 import SignIn from '@/views/SignIn.vue'
 import Account from '@/views/Account.vue'
 import SignUpEnterprise from '@/views/SignUpEnterprise.vue'
-import CreateProject from '@/views/CreateProject.vue';
+import CreateProject from '@/views/CreateProject.vue'
+import FullRecapProject from '@/views/FullRecapProject.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -25,6 +26,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/create-project',
     name: 'createProject',
     component: CreateProject,
+  },
+  {
+    path: '/fullrecap-project',
+    name: 'FullRecapProject',
+    component: FullRecapProject,
+    props: false,
   },
 ]
 

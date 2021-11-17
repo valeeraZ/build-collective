@@ -22,8 +22,8 @@
       <div class="explanations" v-if="enterpriseAccount">
         <h2>Enterprise Information</h2>
         <p><b>Name of Enterprise: </b>{{ enterpriseAccount.name }}</p>
-        <p><b>Owner: </b>{{ enterpriseAccount.owner.username }}</p>
-        <p><b>Owner's Address: </b>{{ address }}</p>
+        <p><b>Owner: </b>{{ this.enterpriseOwnerAccount.username }}</p>
+        <p><b>Owner's Address: </b>{{ enterpriseAccount.owner }}</p>
         <div>
           <b>Members: </b>
           <p
@@ -44,31 +44,8 @@
       :subtitle="`Number of Projects: ${projects.length}`"
       v-if="projects"
     >
-      <div
-        class="explanations"
-        v-for="project in projects"
-        v-bind:key="project.name"
-      >
-        <h2>Project Information</h2>
-        <p><b>Name of Project: </b>{{ project.name }}</p>
-        <p>
-          <b>Owner of Project: </b>
-          {{
-            project.ownedByUser ? project.owner.username : project.owner.name
-          }}
-        </p>
-        <div>
-          <b>Contributors: </b>
-          <p
-            v-for="contributor in project.contributors"
-            v-bind:key="contributor.address"
-            style="padding-left: 10px"
-          >
-            Account Name: {{ contributor.account.username }} &nbsp; Address:
-            {{ contributor.address }}
-          </p>
-        </div>
-        <p><b>Balance of Project: </b>{{ project.balance }} Tokens</p>
+      <div v-for="project in projects" v-bind:key="project.name">
+        <resume-project :project="project"></resume-project>
       </div>
     </card>
     <spacer :size="24" />
@@ -123,10 +100,11 @@ import { defineComponent, computed } from 'vue'
 import { useStore } from 'vuex'
 import Card from '@/components/Card.vue'
 import Spacer from '@/components/Spacer.vue'
+import ResumeProject from '@/components/ResumeProject.vue'
 
 export default defineComponent({
   name: 'Account',
-  components: { Spacer, Card },
+  components: { ResumeProject, Spacer, Card },
   setup() {
     const store = useStore()
     const address = computed(() => store.state.account.address)
@@ -138,6 +116,7 @@ export default defineComponent({
     const account = null
     const username = ''
     const userBalance = ''
+    const enterpriseOwnerAccount: any = { username: '', balance: 0 }
     const enterpriseAccount = null
     const enterpriseMembers: any[] = []
     const projects: any[] = []
@@ -145,6 +124,7 @@ export default defineComponent({
       account,
       username,
       userBalance,
+      enterpriseOwnerAccount,
       enterpriseAccount,
       enterpriseMembers,
       projects,
@@ -186,6 +166,7 @@ export default defineComponent({
       .call()
     if (enterpriseAccount.name) {
       this.enterpriseAccount = enterpriseAccount
+      this.enterpriseOwnerAccount = await contract.methods.getUserByAddress(enterpriseAccount.owner).call()
       const membersAddress = enterpriseAccount.membersAddress
       for (const membersAddressKey of membersAddress) {
         const member = await contract.methods
@@ -193,7 +174,10 @@ export default defineComponent({
           .call()
         this.enterpriseMembers.push({
           address: membersAddressKey,
-          account: member,
+          account: {
+            username: member.username,
+            balance: member.balance
+          },
         })
       }
     }
@@ -218,12 +202,22 @@ export default defineComponent({
             .call()
           contributors.push({
             address: contributorsAddressKey,
-            account: contributor,
+            account: {
+              username: contributor.username,
+              balance: contributor.balance,
+              registered: contributor.registered,
+            },
           })
         }
         this.projects.push({
+          id: project.id,
           name: name,
-          owner: owner,
+          owner: {
+            name: owner.name || undefined,
+            username: owner.username || undefined,
+            balance: owner.balance,
+          },
+          ownerAddress: project.owner,
           ownedByUser: project.ownedByUser,
           balance: balance,
           contributors: contributors,
