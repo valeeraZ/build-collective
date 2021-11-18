@@ -18,7 +18,7 @@
       </p>
     </div>
     <p><b>Balance of Project: </b>{{ project.balance }} Tokens</p>
-    <a href="#" @click="gotoFullRecap">
+    <a href="#" style="color: white" @click="gotoFullRecap">
       See the full summary about this project
     </a>
   </div>
@@ -35,9 +35,10 @@ export default defineComponent({
     gotoFullRecap() {
       this.$router.push({
         name: 'FullRecapProject',
-        params: {
-          project: JSON.stringify(this.project),
-        },
+        query: {
+          id: this.project?.id,
+          ownerAddress: this.project?.ownerAddress,
+        }
       })
     },
   },
@@ -48,8 +49,5 @@ export default defineComponent({
     const contract = computed(() => store.state.contract)
     return { address, contract, balance }
   },
-  mounted() {
-    console.log(this.project)
-  }
 })
 </script>
