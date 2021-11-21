@@ -29,7 +29,13 @@
         </p>
       </div>
       <p><b>Balance of Project: </b>{{ this.project.balance }} Tokens</p>
-      <p><b>Issues: </b> {{ this.issues }}</p>
+      <b v-if="issues.length > 0">Bounties: </b>
+      <div
+        v-for="issue in this.issues"
+        v-bind:key="issue.id"
+      >
+        <resume-issue :issue="issue" :project-id="project.id"></resume-issue>
+      </div>
       <p>
         <a href="#" style="color: white" @click="createIssue">
           Create a bounty with reward
@@ -56,16 +62,26 @@ import { computed, defineComponent } from 'vue'
 import Card from '@/components/Card.vue'
 import { useStore } from 'vuex'
 import SponsorProjectModal from '@/components/SponsorProjectModal.vue'
+import ResumeIssue from "@/components/ResumeIssue.vue";
 
 export default defineComponent({
   name: 'FullRecapProject',
-  components: { Card, SponsorProjectModal },
+  components: { ResumeIssue, Card, SponsorProjectModal },
   methods: {
     async updateProjectBalance() {
       const project = await this.contract.methods
         .getProjectByIdAndAddress(this.ownerAddress, this.id)
         .call()
       this.project.balance = project.balance
+    },
+    async createIssue() {
+      this.$router.push({
+        name: 'CreateIssue',
+        query: {
+          id: this.project?.id,
+          ownerAddress: this.project?.ownerAddress,
+        }
+      })
     },
   },
   setup() {

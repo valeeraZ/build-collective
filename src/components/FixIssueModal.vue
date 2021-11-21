@@ -4,31 +4,19 @@
       <div class="modal-wrapper">
         <div class="modal-container">
           <div class="modal-header">
-            <h2>Sponsor this project</h2>
+            <h2>Declare that you have fixed this issue and get the bounty</h2>
           </div>
 
           <div class="modal-body">
-            <h3>Your balance: {{ balance }}</h3>
-            <h3>Amount of tokens to Sponsorship:</h3>
-            <input
-              id="amountSponsor"
-              type="number"
-              class="input-username"
-              style="color: black"
-              v-model="amount"
-              placeholder="amount of tokens"
-            />
-            <span v-if="this.error" style="color: red">
-              You don't have enough tokens to sponsor
-            </span>
+            <h3>By confirming that you have fixed this issue, you will get the amount of reward of ETH.</h3>
+            <button class="modal-default-button" style="color: red" @click="fixIssue">
+              Confirm
+            </button>
           </div>
 
           <div class="modal-footer">
             <button class="modal-default-button" @click="this.$emit('close')">
               Cancel
-            </button>
-            <button class="modal-default-button" @click="sponsor">
-              Sponsor
             </button>
           </div>
         </div>
@@ -42,10 +30,10 @@ import { computed, defineComponent } from 'vue'
 import { useStore } from 'vuex'
 
 export default defineComponent({
-  name: 'SponsorProjectModal',
+  name: 'FixIssueModal',
   props: {
     idProject: String,
-    ownerAddress: String,
+    idIssue: String,
   },
   setup() {
     const store = useStore()
@@ -65,14 +53,11 @@ export default defineComponent({
     this.balance = account.balance
   },
   methods: {
-    async sponsor() {
-      if (this.amount > this.balance) {
-        this.error = true
-      } else {
-        this.error = false
-        await this.contract.methods.sponsorProject(this.ownerAddress, this.idProject, this.amount).send()
-        this.$emit('close')
-      }
+    async fixIssue() {
+      const { idProject, idIssue, address } = this
+      await this.contract.methods.fixAnIssue(idProject, idIssue, address).call()
+      this.$emit('close')
+      location.reload()
     },
   },
 })

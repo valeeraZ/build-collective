@@ -143,14 +143,14 @@ contract BuildCollective is Ownable {
     return issue;
   }
 
-  function fixAnIssue(uint256 projectId, uint256 issueId, address payable fixer) public returns (bool){
+  function fixAnIssue(uint256 projectId, uint256 issueId, address payable fixer) public payable returns (bool){
     for (uint i = 0; i < issues[projectId].length; i++){
       if (issues[projectId][i].id == issueId) {
         issues[projectId][i].closed = true;
         issues[projectId][i].fixer = fixer;
-        bool sent = fixer.send(issues[projectId][i].reward);
-        require(sent, "Failed to send ETH to the fixer");
-        return sent;
+        uint amount = issues[projectId][i].reward;
+        fixer.transfer(amount);
+        return true;
       }
     }
     return false;
@@ -161,4 +161,12 @@ contract BuildCollective is Ownable {
     users[msg.sender].balance += amount;
     return true;
   }
+
+  function transfer(address payable payee, uint256 amount) public payable returns (bool){
+    bool success = payee.send(amount);
+    return success;
+  }
+
+  // fallback
+  function () external payable{}
 }

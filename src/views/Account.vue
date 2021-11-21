@@ -69,6 +69,15 @@
           Create your project
         </router-link>
       </card>
+      <card
+        title="Explore some projects"
+        subtitle="Try to fix some issues and be a bounty hunter !"
+        :blue="true"
+      >
+        <router-link class="card-body" to="/explore-projects">
+          View all the projects
+        </router-link>
+      </card>
     </div>
   </div>
   <div class="signUp" v-else>
