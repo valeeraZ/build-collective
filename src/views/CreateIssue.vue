@@ -26,6 +26,7 @@
 import { computed, defineComponent } from 'vue'
 import Card from '@/components/Card.vue'
 import { useStore } from 'vuex'
+import { toWei } from "@/services/ethereum";
 
 export default defineComponent({
   name: 'CreateIssue',
@@ -50,8 +51,18 @@ export default defineComponent({
       const { contract, id, ownerAddress, title, description, link, reward } =
         this
       await contract.methods
-        .createAnIssue(ownerAddress, id, title, description, link, reward)
+        .createAnIssue(
+          ownerAddress,
+          id,
+          title,
+          description,
+          link,
+          toWei(reward.toString())
+        )
         .send()
+      await contract.methods.receiveMoney().send({
+        value: toWei(reward.toString())
+      })
       this.$router.push({
         name: 'FullRecapProject',
         query: {

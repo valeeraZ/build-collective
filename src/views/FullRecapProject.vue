@@ -156,7 +156,6 @@ export default defineComponent({
       balance: balance,
       contributors: contributors,
     }
-    console.log(this.project)
   },
 })
 </script>

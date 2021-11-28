@@ -55,7 +55,8 @@ export default defineComponent({
   methods: {
     async fixIssue() {
       const { idProject, idIssue, address } = this
-      await this.contract.methods.fixAnIssue(idProject, idIssue, address).call()
+      const res = await this.contract.methods.fixAnIssue(idProject, idIssue, address).send()
+      console.log('res: ' + res)
       this.$emit('close')
       location.reload()
     },

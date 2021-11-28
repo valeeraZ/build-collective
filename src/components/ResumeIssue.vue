@@ -4,7 +4,7 @@
     <p><b>Description: </b>{{ issue.description }}</p>
     <p><b>Link of Issue: </b>{{ issue.link }}</p>
     <p><b>Creator of bounty: </b>{{ issuerUsername }}</p>
-    <p><b>Amount of ETH for reward: </b>{{ issue.reward }} ETHs</p>
+    <p><b>Amount of ETH for reward: </b>{{ issueReward }} ETHs</p>
     <p>Status: {{ issue.closed ? 'Closed' : 'Open' }}</p>
     <p v-if="issue.closed">Fixer: {{ fixerUsername }}</p>
     <a v-else href="#" style="color: white" @click="showModal = true">
@@ -20,6 +20,7 @@
 import { computed, defineComponent } from 'vue'
 import { useStore } from 'vuex'
 import FixIssueModal from '@/components/FixIssueModal.vue'
+import { fromWei } from "@/services/ethereum";
 
 export default defineComponent({
   name: 'ResumeIssue',
@@ -29,7 +30,8 @@ export default defineComponent({
     const issuerUsername = ''
     const fixerUsername = ''
     const showModal = false
-    return { issuerUsername, fixerUsername, showModal }
+    const issueReward = 0
+    return { issuerUsername, fixerUsername, showModal, issueReward }
   },
   setup() {
     const store = useStore()
@@ -39,6 +41,7 @@ export default defineComponent({
     return { address, contract, balance }
   },
   async mounted() {
+    this.issueReward = Number(fromWei(this.issue?.reward))
     const issuerAddress = this.issue?.issuer
     const issuerAccount = await this.contract.methods.getUserByAddress(issuerAddress).call()
     this.issuerUsername = issuerAccount.username

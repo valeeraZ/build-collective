@@ -4,6 +4,17 @@ pragma experimental ABIEncoderV2;
 import "./Ownable.sol";
 
 contract BuildCollective is Ownable {
+
+  uint public balanceReceived;
+
+  function receiveMoney() payable public  {
+
+  }
+
+  function getBalance() public view returns(uint) {
+    return address(this).balance;
+  }
+
   struct User {
     string username;
     uint256 balance;
@@ -132,7 +143,7 @@ contract BuildCollective is Ownable {
     return false;
   }
 
-  function createAnIssue(address projectOwnerAddress, uint256 projectId, string memory title, string memory description, string memory link, uint256 reward) public returns (Issue memory){
+  function createAnIssue(address projectOwnerAddress, uint256 projectId, string memory title, string memory description, string memory link, uint256 reward) public payable returns (Issue memory){
     require(users[projectOwnerAddress].registered);
     require(users[msg.sender].registered);
     require(bytes(title).length > 0);

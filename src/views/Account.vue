@@ -168,6 +168,8 @@ export default defineComponent({
   },
   async mounted() {
     const { address, contract } = this
+    const contractBalance = await contract.methods.getBalance().call()
+    console.log('Contract Balance: ' + contractBalance)
     const account = await contract.methods.getUserByAddress(address).call()
     if (account.registered) this.account = account
     const enterpriseAccount = await contract.methods

@@ -16,6 +16,14 @@ const getBalance = async (account: string) => {
   return Web3.utils.fromWei(balance)
 }
 
+export const toWei = (amount: string) => {
+  return Web3.utils.toWei(amount, 'ether')
+}
+
+export const fromWei = (amount: string) => {
+  return Web3.utils.fromWei(amount, 'ether')
+}
+
 export const connect = async () => {
   if (win.ethereum) {
     const web3 = new Web3(win.ethereum)
