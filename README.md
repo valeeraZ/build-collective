@@ -4,6 +4,15 @@ Welcome to the DAAR project. The idea will be to implement an OpenCollective com
 in a decentralized way, on Ethereum. This will have cool side effects, like not
 be forced to pay for servers.
 
+# Demo
+Here is a video about using this DApp. You can create a new user with an address given in Ganache, an username and some tokens. Once the user is created, you can create an enterprise with some members on the block chain, or create a project with some contributors on the block chain.
+
+You can also create a bounty with an issue of a project, with an amount of reward in ETH. The one who declare that he has fixed the issue can get the reward, and the issue turns out to be closed.
+
+
+https://user-images.githubusercontent.com/39196828/143778062-8a395bbb-1c35-4846-b46f-1767b5bf9fbf.mov
+
+
 # Installation
 
 ```bash
